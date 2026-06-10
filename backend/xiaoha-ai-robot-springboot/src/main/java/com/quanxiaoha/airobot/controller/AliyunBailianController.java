@@ -1,5 +1,6 @@
 package com.quanxiaoha.airobot.controller;
 
+import com.quanxiaoha.airobot.model.AIResponse;
 import jakarta.annotation.Resource;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
@@ -30,18 +31,14 @@ public class AliyunBailianController {
      */
     @GetMapping(value = "/generateStream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<AIResponse> generateStream(@RequestParam(value = "message", defaultValue = "你是谁？") String message) {
-        // 系统角色消息
-        SystemMessage systemMessage = new SystemMessage("请你扮演一名犬小哈 Java 项目实战专栏的客服人员");
-        // 用户角色消息
-        UserMessage userMessage = new UserMessage(message);
         // 构建提示词
-        Prompt prompt = new Prompt(Arrays.asList(systemMessage, userMessage));
+        Prompt prompt = new Prompt(new UserMessage(message));
 
         // 流式输出
         return chatModel.stream(prompt)
                 .mapNotNull(chatResponse -> {
                     Generation generation = chatResponse.getResult();
-                    String text = generation.getOutput().getText();
+                    String text=generation.getOutput().getText();
                     return AIResponse.builder().v(text).build();
                 });
 
