@@ -1,0 +1,27 @@
+server:
+  port: 8080 #项目启动端口
+
+spring:
+  ai:
+    zhipuai:
+      api-key: a464579c69cc4466bb4049161f1b2a13.ywB1937J5qudingQ
+      chat:
+        options:
+          model: glm-4-air
+          temperature: 0.7
+    deepseek:
+      api-key: sk-34558c14eb1043df85cf7307796fcb04
+      chat:
+        options:
+          model: deepseek-chat #使用哪个模型
+          temperature: 0.8 #温度值
+    openai:
+      base-url: https://dashscope.aliyuncs.com/compatible-mode # OpenAI 服务的访问地址，这里使用的是阿里云百炼
+      api-key: sk-8a012320964143efbbfe55970c013f69  # 填写阿里云百炼的 API Key, 该成你自己的
+      chat:
+        options:
+          model: qwen-turbo # 模型名称
+          temperature: 0.7 # 温度值
+logging:
+  level:
+    org.springframework.ai.chat.client.advisor: debug
