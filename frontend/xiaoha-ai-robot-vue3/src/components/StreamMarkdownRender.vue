@@ -6,11 +6,12 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/github.css' // 导入 GitHub 风格的高亮样式
 import markdownItHighlightJs from 'markdown-it-highlightjs'
+import { message } from 'ant-design-vue'
 
 // 定义一个 content 字段，用于父组件传入 markdown 文本
 const props = defineProps({
@@ -61,33 +62,25 @@ md.renderer.rules.fence = function (tokens, idx, options, env, renderer) {
     langName = langCode.toLowerCase() // 转换为小写统一格式
   }
   
-  // 使用默认渲染器生成代码块的 HTML 内容
+// 使用默认渲染器生成原始 HTML 内容
   const originalContent = defaultRender(tokens, idx, options, env, renderer)
-    // 拼装最终的 HTML
+  
+  // 拼装最终的 HTML
   let finalContent = `<div class="code-block-wrapper">
-      <div class="code-header">     `
-  // 如果有返回代码块语言信息，需要显示
-  if (langName) {
-    finalContent += `<div class="code-language-label">${langName}</div>`
-  }
-  // 返回渲染结果
-  // 返回渲染结果
-  return finalContent += `
-      </div>
-      <div class="code-content">
-        ${originalContent}
-      </div>
-    </div>`
-  // 如果有返回代码块语言信息，需要显示
+      <div class="code-header">
+      `
+
+// 如果有返回代码块语言信息，需要显示
   if (langName) {
     finalContent += `<div class="code-language-label">${langName}</div>`
   }
 
-   // 代码块中的实际代码
+  // 代码块中的实际代码
   const codeContent = token.content
   // 为每个代码块分配一个唯一标识，方便知道复制的哪个代码块中的内容
   const codeId = `code-${Math.random().toString(36).substr(2, 9)}`
-   // 返回渲染结果
+
+  // 返回渲染结果
   return finalContent += `
         <button class="copy-code-btn" onclick="copyCode('${codeId}')">  
           <svg t="1750068080826" class="copy-icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1529" 
@@ -101,16 +94,94 @@ md.renderer.rules.fence = function (tokens, idx, options, env, renderer) {
     </div>`
 }
 
+// 初始化复制功能
+const setupCopyFunction = () => {
+  // 确保全局复制函数只定义一次
+  if (!window.copyCode) {
+    // 定义全局复制函数
+    window.copyCode = async (codeId) => {
+      try {
+        // 1. 获取目标代码元素
+        const codeElement = document.getElementById(codeId)
+        if (!codeElement) return // 元素不存在则退出
+        
+        // 2. 获取待复制的代码内容
+        // 从元素的 data-code 属性获取 URL 编码的代码内容并解码
+        const codeContent = decodeURIComponent(codeElement.getAttribute('data-code'))
+        
+        // 3. 写入剪贴板
+        await navigator.clipboard.writeText(codeContent)
+        
+        // 显示复制成功反馈
+        const btn = codeElement.parentElement.querySelector('.copy-code-btn')
+        if (btn) {
+          // 保存原始图标 SVG
+          const originalIcon = btn.querySelector('.copy-icon').innerHTML
+          
+          // 替换为对号图标
+          btn.querySelector('.copy-icon').innerHTML = `<path d="M912 190h-69.9c-9.8 0-19.1 4.5-25.1 12.2L404.7 724.5 207 474c-6.1-7.7-15.3-12.2-25.1-12.2H112c-6.7 0-10.4 7.7-6.3 12.9L357.1 864c12.6 16.1 35.5 16.1 48.1 0L918.3 202.9c4.1-5.2 0.4-12.9-6.3-12.9z" p-id="4582"></path>`
+          // 添加复制成功状态类
+          btn.classList.add('copied')     
+          message.success('复制成功')
+
+          // 1秒后恢复原始图标
+          setTimeout(() => {
+            btn.querySelector('.copy-icon').innerHTML = originalIcon
+            btn.classList.remove('copied')
+          }, 1000)
+        }
+      } catch (err) {
+        console.error('复制失败:', err)
+      }
+    }
+  }
+}
+
 // 监听 content 字段，流式更新处理
 watch(() => props.content, (newVal) => {
   if (newVal) {
     // 渲染为 HTML
     const html = md.render(newVal)
     renderedContent.value = html
+
+    // 确保复制功能在 DOM 更新后可用
+    nextTick(() => {
+      setupCopyFunction()
+    })
   }
 }, { immediate: true })
 </script>
 
 <style scoped>
+/* 复制按钮样式 */
+:deep(.copy-code-btn) {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border-radius: 12px;
+  padding: 0 8px;
+  color: #586069;
+  font-size: 12px;
+  height: 28px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
 
+:deep(.copy-code-btn.copied .copy-icon) {
+  fill: #22c55e;
+}
+
+:deep(.copy-code-btn:hover) {
+  background-color: rgb(0 0 0 / 4%);
+}
+
+:deep(.copy-icon) {
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+:deep(.copy-text) {
+  white-space: nowrap;
+}
 </style>
