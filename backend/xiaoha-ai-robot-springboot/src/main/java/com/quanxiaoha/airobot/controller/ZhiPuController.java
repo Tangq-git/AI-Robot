@@ -16,13 +16,6 @@ public class ZhiPuController {
 
     @Resource
     private ZhiPuAiChatModel chatModel;
-
-//    @GetMapping("/generate")
-//    public String generate(@RequestParam(value = "message",defaultValue = "你是谁?") String message){
-//        //一次性返回结果
-//        return chatModel.call(message);
-//    }
-
     /**
      * 流式对话
      * @param message

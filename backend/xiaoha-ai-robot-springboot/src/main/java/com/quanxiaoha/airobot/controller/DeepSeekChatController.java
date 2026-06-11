@@ -4,6 +4,7 @@ import jakarta.annotation.Resource;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.deepseek.DeepSeekChatModel;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -19,6 +20,7 @@ import reactor.core.publisher.Flux;
  **/
 @RestController
 @RequestMapping("/ai")
+@ConditionalOnProperty(prefix = "deepseek.controller", name = "enable", havingValue = "true", matchIfMissing = false)
 public class DeepSeekChatController {
 
     @Resource

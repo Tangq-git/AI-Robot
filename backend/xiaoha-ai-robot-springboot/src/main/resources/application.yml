@@ -2,26 +2,39 @@ server:
   port: 8080 #项目启动端口
 
 spring:
+  cassandra:
+    contact-points: 127.0.0.1
+    port: 9042
+    local-datacenter: datacenter1
   ai:
+    chat:
+      memory:
+        repository:
+          cassandra:
+            keyspace: xiaoha_ai_robot #指定存储聊天记忆的 Keyspace(类似数据库名)
+            table: t_ai_chat_memory #表名
+            time-to-live: 1095d #数据的自动过期时间(三年)
+            initialize-schema: true #自动初始化表结构
     zhipuai:
       api-key: a464579c69cc4466bb4049161f1b2a13.ywB1937J5qudingQ
       chat:
         options:
           model: glm-4-air
           temperature: 0.7
-    deepseek:
-      api-key: sk-34558c14eb1043df85cf7307796fcb04
-      chat:
-        options:
-          model: deepseek-chat #使用哪个模型
-          temperature: 0.8 #温度值
+#    deepseek:
+#      api-key: sk-34558c14eb1043df85cf7307796fcb04
+#      chat:
+#        options:
+#          model: deepseek-chat #使用哪个模型
+#          temperature: 0.8 #温度值
     openai:
       base-url: https://dashscope.aliyuncs.com/compatible-mode # OpenAI 服务的访问地址，这里使用的是阿里云百炼
       api-key: sk-8a012320964143efbbfe55970c013f69  # 填写阿里云百炼的 API Key, 该成你自己的
       chat:
         options:
-          model: qwen-turbo # 模型名称
+          model: qwen-omni-turbo # 模型名称
           temperature: 0.7 # 温度值
+          max-tokens: 1024  # 限制单次最大输出，避免超长文本耗Token
 logging:
   level:
     org.springframework.ai.chat.client.advisor: debug
