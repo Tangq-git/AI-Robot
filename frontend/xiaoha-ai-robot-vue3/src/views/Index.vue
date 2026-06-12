@@ -354,7 +354,8 @@ const sendMessage = async () => {
 
   try {
     // 建立 SSE 连接
-    eventSource = new EventSource(`http://localhost:8080/v7/ai/generateStream3?message=${encodeURIComponent(userMessage)}&lang=Python`)
+    eventSource = new EventSource(`http://localhost:8080/mcp/ai/generateStream?message=${encodeURIComponent(userMessage)}&chatId=5`)
+    //eventSource = new EventSource(`http://localhost:8080/v7/ai/generateStream3?message=${encodeURIComponent(userMessage)}&lang=Python`)
     // C++:eventSource = new EventSource(`http://localhost:8080/v7/ai/generateStream3?message=${encodeURIComponent(userMessage)}&lang=CPP`)
     // eventSource = new EventSource(`http://localhost:8080/v7/ai/generateStream3?message=${encodeURIComponent(userMessage)}&lang=Go`)
 
