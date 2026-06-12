@@ -35,6 +35,16 @@ spring:
           model: qwen-omni-turbo # 模型名称
           temperature: 0.7 # 温度值
           max-tokens: 1024  # 限制单次最大输出，避免超长文本耗Token
+    mcp:
+      client:
+        stdio:
+          servers-configuration: classpath:/mcp-servers-config.json # 指定 MCP 服务的配置文件路径
+        toolcallback:
+          enabled: true # 开启 MCP 客户端的工具回调（Tool Callback）功能
+weather:
+  api:
+    key: 0f6b6f16d2be4ec1be48025e1998b425
+
 logging:
   level:
     org.springframework.ai.chat.client.advisor: debug
