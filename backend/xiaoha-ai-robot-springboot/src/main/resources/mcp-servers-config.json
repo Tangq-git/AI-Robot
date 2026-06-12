@@ -11,6 +11,17 @@
       "env": {
         "AMAP_MAPS_API_KEY": "ce47fb9d65eb8994378b7554100d89e7"
       }
+    },
+    "filesystem": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "D:\\",
+        "E:\\"
+      ]
     }
   }
 }

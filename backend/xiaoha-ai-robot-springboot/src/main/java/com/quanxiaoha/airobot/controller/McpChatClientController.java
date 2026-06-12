@@ -30,7 +30,7 @@ public class McpChatClientController {
 
         return chatClient.prompt()
                 .user(message)
-                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID,chatId))
+                //.advisors(a -> a.param(ChatMemory.CONVERSATION_ID,chatId))
                 .stream()
                 .chatResponse()
                 .mapNotNull(chatResponse -> {
