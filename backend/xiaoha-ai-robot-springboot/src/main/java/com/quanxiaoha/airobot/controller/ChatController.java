@@ -112,6 +112,11 @@ public class ChatController {
                 .mapNotNull(text -> AIResponse.builder().v(text).build()); // 构建返参 AIResponse
     }
 
+    @PostMapping("/new")
+    @ApiOperationLog(description = "新建对话")
+    public Response<?> newChat(@RequestBody @Validated NewChatReqVO newChatReqVO) {
+        return chatService.newChat(newChatReqVO);
+    }
     @PostMapping("/message/list")
     @ApiOperationLog(description = "查询对话历史消息")
     public PageResponse<FindChatHistoryMessagePageListRspVO> findChatMessagePageList(@RequestBody @Validated FindChatHistoryMessagePageListReqVO findChatHistoryMessagePageListReqVO) {

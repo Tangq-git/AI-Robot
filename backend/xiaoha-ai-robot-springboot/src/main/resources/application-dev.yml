@@ -44,3 +44,6 @@ searxng: # SearXNG 搜索引擎配置
   url: http://localhost:8888/search # SearXNG 服务的 API 端点地址
   count: 10 # 每次从搜索结果中，提取的最大数量
 
+customer-service:
+  md-storage-path: E:\\java_workspace\\xiaoha-ai-robot # Markdown 问答文件存储路径
+
