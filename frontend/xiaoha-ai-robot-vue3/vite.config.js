@@ -7,6 +7,15 @@ import { createSvgIconsPlugin } from 'vite-plugin-svg-icons'
 import path from 'path' // 👈 新增
 
 export default defineConfig({
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    }
+  },
   plugins: [
     vue(),
     tailwindcss(),
