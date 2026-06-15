@@ -4699,3 +4699,24 @@ org.springframework.web.servlet.resource.NoResourceFoundException: No static res
 2026-06-15 21:19:15.958 [tomcat-shutdown] INFO  org.springframework.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
 2026-06-15 21:19:15.964 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - AI-Robot-HikariCP - Shutdown initiated...
 2026-06-15 21:19:15.967 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - AI-Robot-HikariCP - Shutdown completed.
+2026-06-15 21:19:19.602 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.2.Final
+2026-06-15 21:19:19.652 [main] INFO  com.quanxiaoha.airobot.XiaohaAiRobotSpringbootApplication - Starting XiaohaAiRobotSpringbootApplication using Java 21.0.10 with PID 38096 (D:\develop\Code\xiaoha-ai-robot\ai-robot\backend\xiaoha-ai-robot-springboot\target\classes started by Tangq in D:\develop\Code\xiaoha-ai-robot\ai-robot\backend\xiaoha-ai-robot-springboot)
+2026-06-15 21:19:19.661 [main] INFO  com.quanxiaoha.airobot.XiaohaAiRobotSpringbootApplication - The following 1 profile is active: "dev"
+2026-06-15 21:19:21.451 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-06-15 21:19:21.469 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-06-15 21:19:21.471 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-06-15 21:19:21.471 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.40]
+2026-06-15 21:19:21.547 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-06-15 21:19:21.547 [main] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1822 ms
+2026-06-15 21:19:22.946 [main] INFO  com.baomidou.mybatisplus.extension.spring.MybatisPlusApplicationContextAware - Register ApplicationContext instances org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@71154f21
+2026-06-15 21:19:23.114 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-06-15 21:19:23.126 [main] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-06-15 21:19:23.135 [main] INFO  com.quanxiaoha.airobot.XiaohaAiRobotSpringbootApplication - Started XiaohaAiRobotSpringbootApplication in 3.966 seconds (process running for 5.385)
+2026-06-15 21:20:00.479 [http-nio-8080-exec-1] INFO  org.apache.tomcat.util.http.parser.Cookie - A cookie header was received [enabled_engines="360search__general\054abcnyheter__general\054aol__general\054baidu__general\054bing__general\054boardreader__general\054bpb__general\054crowdview__general\054yep__general\054ddg definitions__general\054encyclosearch__general\054dogpile__general\054duckduckgo web__general\054tineye__general\054fastbot__general\054fireball__general\054fynd__general\054gabanza__general\054gmx__general\054mozhi__general\054mwmbl__general\054openlibrary__general\054presearch__general\054presearch videos__general\054quark__general\054qwant__general\054searchmysite__general\054sogou__general\054privacywall__general\054tagesschau__general\054yandex__general\054yahoo__general\054wiby__general\054wikibooks__general\054wikiquote__general\054wikisource__general\054wikispecies__general\054wikiversity__general\054wikivoyage__general\054wolframalpha__general\054seznam__general\054mojeek__general\054naver__general\054yacy__general\054reloado__general\054resulthunter__general\054vuhuv__general\054wikimini__general\054zapmeta__general\054searchtoday__general\054infospace__general"] that contained an invalid cookie. That cookie will be ignored.
+ Note: further occurrences of this error will be logged at DEBUG level.
+2026-06-15 21:20:00.492 [http-nio-8080-exec-1] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-06-15 21:20:00.493 [http-nio-8080-exec-1] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-06-15 21:20:00.496 [http-nio-8080-exec-1] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-06-15 21:20:00.902 [http-nio-8080-exec-1] INFO  com.zaxxer.hikari.HikariDataSource - AI-Robot-HikariCP - Starting...
+2026-06-15 21:20:01.257 [http-nio-8080-exec-1] INFO  com.zaxxer.hikari.pool.HikariPool - AI-Robot-HikariCP - Added connection com.p6spy.engine.wrapper.ConnectionWrapper@7d471cfe
+2026-06-15 21:20:01.260 [http-nio-8080-exec-1] INFO  com.zaxxer.hikari.HikariDataSource - AI-Robot-HikariCP - Start completed.
