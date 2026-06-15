@@ -2,55 +2,7 @@ server:
   port: 8080 #项目启动端口
 
 spring:
-  cassandra:
-    contact-points: 127.0.0.1
-    port: 9042
-    local-datacenter: datacenter1
-  ai:
-    chat:
-      memory:
-        repository:
-          cassandra:
-            keyspace: xiaoha_ai_robot #指定存储聊天记忆的 Keyspace(类似数据库名)
-            table: t_ai_chat_memory #表名
-            time-to-live: 1095d #数据的自动过期时间(三年)
-            initialize-schema: true #自动初始化表结构
-    zhipuai:
-      api-key: a464579c69cc4466bb4049161f1b2a13.ywB1937J5qudingQ
-      chat:
-        options:
-          model: glm-4-air
-          temperature: 0.7
-#    deepseek:
-#      api-key: sk-34558c14eb1043df85cf7307796fcb04
-#      chat:
-#        options:
-#          model: deepseek-chat #使用哪个模型
-#          temperature: 0.8 #温度值
-    openai:
-      base-url: https://dashscope.aliyuncs.com/compatible-mode # OpenAI 服务的访问地址，这里使用的是阿里云百炼
-      api-key: sk-8a012320964143efbbfe55970c013f69  # 填写阿里云百炼的 API Key, 该成你自己的
-      chat:
-        options:
-          model: qwen-omni-turbo # 模型名称
-          temperature: 0.7 # 温度值
-          max-tokens: 1024  # 限制单次最大输出，避免超长文本耗Token
-    mcp:
-      client:
-        stdio:
-          servers-configuration: classpath:/mcp-servers-config.json # 指定 MCP 服务的配置文件路径
-        toolcallback:
-          enabled: true # 开启 MCP 客户端的工具回调（Tool Callback）功能
-        type: sync #客户端使用同步通信模式
-        request-timeout: 20s #设置单词请求超时时间
-        sse: # SSE (Server-Sent Events) 流式响应配置
-          connections:  # 定义 SSE 连接端点
-            qq-mcp-server: # 自定义连接名称（可任意命名）
-              url: http://localhost:8000 # MCP 服务实际地址
-weather:
-  api:
-    key: 0f6b6f16d2be4ec1be48025e1998b425
-
+  profiles:
+    active: dev #激活 dev 开发环境
 logging:
-  level:
-    org.springframework.ai.chat.client.advisor: debug
+  config: classpath:log4j2.xml #设置日志配置文件路径
