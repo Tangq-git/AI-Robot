@@ -31,12 +31,70 @@ import java.util.UUID;
  **/
 @Service
 @Slf4j
-public class CustomerServiceImpl {
+public class CustomerServiceImpl implements CustomerService{
 
     @Value("${customer-service.md-storage-path}")
     private String mdStoragePath;
 
     @Resource
     private AiCustomerServiceMdStorageMapper aiCustomerServiceMdStorageMapper;
+
+    public Response<?> uploadMarkdownFile(MultipartFile file){
+        if(file==null||file.isEmpty()){
+            throw new BizException(ResponseCodeEnum.UPLOAD_FILE_CANT_EMPTY);
+        }
+
+        String originalFilename=StringUtils.trimToEmpty(file.getOriginalFilename());
+
+        if(StringUtils.isBlank(originalFilename)|| ! isMarkdownFile(originalFilename)){
+            throw new BizException(ResponseCodeEnum.ONLY_SUPPORT_MARKDOWN);
+        }
+
+        try{
+            //重新生成文件名(防止文件名冲突导致覆盖)
+            String newFilename=UUID.randomUUID().toString()+"-"+originalFilename;
+            //构建存储路径
+            Path storageDirectory=Paths.get(mdStoragePath);
+            Path targetPath=storageDirectory.resolve(newFilename);
+
+            //确保目录存在
+            Files.createDirectories(storageDirectory);
+
+            //保存文件
+//            file.transferTo(targetPath.toFile());
+            // 【修改点】改用NIO复制流，替代transferTo，解决Windows拒绝访问
+            Files.copy(file.getInputStream(), targetPath);
+            //记录操作日志
+            log.info("## Markdown 问答文件存储成功,文件名:{}->存储路径:{}",originalFilename,targetPath);
+
+            //存储入库
+            aiCustomerServiceMdStorageMapper.insert(AiCustomerServiceMdStorageDO.builder()
+                            .originalFileName(originalFilename)
+                            .newFileName(newFilename)
+                            .filePath(targetPath.toString())
+                            .fileSize(file.getSize())
+                            .status(AiCustomerServiceMdStatusEnum.PENDING.getCode())
+                            .createTime(LocalDateTime.now())
+                            .updateTime(LocalDateTime.now())
+                    .build());
+            return Response.success();
+        }catch(IOException e){
+            log.error("## Markdown 问答文件上传失败:{}",originalFilename,e);
+            throw new BizException(ResponseCodeEnum.UPLOAD_FILE_FAILED);
+        }
+
+    }
+
+    /**
+     * 验证文件是否为Markdown格式
+     */
+    private boolean isMarkdownFile(String filename){
+        if(StringUtils.isBlank(filename)){
+            return false;
+        }
+
+        String extension=FilenameUtils.getExtension(filename);
+        return StringUtils.equalsIgnoreCase(extension,"md");
+    }
 
 }

@@ -41,8 +41,11 @@ watch(userMessage, (newText) => {
 })
 
 // 发送消息 - 跳转到对话聊天页并发送消息
-const sendMessage = () => {
+const sendMessage = (payload) => {
   if (!userMessage.value.trim()) return;
+
+  console.log('选中的模型:', payload.selectedModel)
+  console.log('是否联网:', payload.isNetworkSearch)
   
   // 临时保存消息的值，因为子组件中的 userMessage 会被清空
   const userMessageTemp = userMessage.value.trim();

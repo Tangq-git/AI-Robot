@@ -45,5 +45,5 @@ searxng: # SearXNG 搜索引擎配置
   count: 10 # 每次从搜索结果中，提取的最大数量
 
 customer-service:
-  md-storage-path: E:\\java_workspace\\xiaoha-ai-robot # Markdown 问答文件存储路径
+  md-storage-path: D:\develop\Code\xiaoha-ai-robot # Markdown 问答文件存储路径
 

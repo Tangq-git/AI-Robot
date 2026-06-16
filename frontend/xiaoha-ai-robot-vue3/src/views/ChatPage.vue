@@ -3,9 +3,8 @@
     <!-- 主内容区域 -->
     <template #main-content>
       <div class="h-screen flex flex-col overflow-y-auto" ref="chatContainer">
-    <!-- 聊天记录区域 -->
-    <!-- 设置垂直方向内容溢出时，显示滚动条；设置下、上、x 轴水平方向的内边距； -->
-    <div class="flex-1 max-w-3xl mx-auto pb-24 pt-4 px-4">
+          <!-- 聊天记录区域 -->
+          <div class="flex-1 max-w-3xl mx-auto pb-24 pt-4 px-4">
        <!-- 遍历聊天记录 -->
         <template v-for="(chat, index) in chatList" :key="index">
           <!-- 用户提问消息（靠右） -->
@@ -23,45 +22,22 @@
                 <SvgIcon name="deepseek-logo" customCss="w-5 h-5"></SvgIcon>
               </div>
             </div>
-          <!-- 回复的内容 -->
-          <div class="p-1 mb-2 max-w-[90%]">
-            <StreamMarkdownRender :content="chat.content" />
-          </div>
+			<!-- 回复的内容 -->
+              <div class="p-1 mb-2 max-w-[90%]">
+                <LoadingDots v-if="chat.loading" />
+                <StreamMarkdownRender :content="chat.content" />
+              </div>
           </div>
         </template>
     </div>
 
-    <!-- 提问输入框 -->
-    <div class="sticky max-w-3xl mx-auto bg-white bottom-0 left-0 w-full">
-      <div class="bg-gray-100 rounded-3xl px-4 py-3 mx-4 border border-gray-200 flex flex-col">
-        <textarea 
-          v-model="message" 
-          placeholder="给小哈 AI 机器人发送消息"
-          class="bg-transparent border-none outline-none w-full text-sm resize-none min-h-[24px]" 
-          rows="2"
-          @input="autoResize"
-          @keydown.enter.prevent="sendMessage"
-          ref="textareaRef"
-          >
-        </textarea>
-        
-        <!-- 发送按钮 -->
-        <div class="flex justify-end">
-           <button 
-          @click="sendMessage"
-          :disabled="!message.trim()"
-          class="flex items-center justify-center bg-[#4d6bfe] rounded-full w-8 h-8 border border-[#4d6bfe] hover:bg-[#3b5bef] transition-colors
-          disabled:opacity-50
-          disabled:cursor-not-allowed">
->
-           
-          <SvgIcon name="up-arrow" customCss="w-5 h-5 text-white"></SvgIcon>
-          </button>
-        </div>
-        <div class="flex items-center justify-center text-xs text-gray-400 mt-2">内容由 AI 生成，请仔细甄别</div>
-    </div>
-</div>
-</div>
+          <!-- 提问输入框 -->
+          <ChatInputBox
+          v-model="message"
+          containerClass="sticky max-w-3xl mx-auto bg-white bottom-8 left-0 w-full"
+          @sendMessage="sendMessage"
+          />
+      </div>
     </template>
   </Layout>  
 </template>
@@ -295,11 +271,31 @@
 </style>
 
 <script setup> 
-import { ref, onBeforeUnmount, nextTick } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import SvgIcon from '@/components/SvgIcon.vue'
 import StreamMarkdownRender from '@/components/StreamMarkdownRender.vue'
 import Layout from '@/layouts/Layout.vue'
-// 滚动到底部
+import { useRoute } from 'vue-router'
+// 导入Pinia store
+import { useChatStore } from '@/stores/chatStore'
+import { fetchEventSource } from '@microsoft/fetch-event-source'
+import LoadingDots from '@/components/LoadingDots.vue'
+// 获取 chat store
+const chatStore = useChatStore()
+
+
+onMounted(() => {
+  const firstMessage = history.state?.firstMessage
+  // 检查跳转路由时，是否有初始消息
+  if (firstMessage) {
+    message.value = firstMessage
+    // 发送消息
+    sendMessage({
+      selectedModel: chatStore.selectedModel,
+      isNetworkSearch: chatStore.isNetworkSearchSelected
+    })
+  }
+})// 滚动到底部
 const scrollToBottom = async () => {
   await nextTick() // 等待 Vue.js 完成 DOM 更新
   if (chatContainer.value) { // 若容器存在
@@ -308,8 +304,6 @@ const scrollToBottom = async () => {
     container.scrollTop = container.scrollHeight;
   }
 }
-// 1. 补上缺失的 message
-const message = ref('')
 
 // textarea引用
 const textareaRef = ref(null);
@@ -338,10 +332,21 @@ const chatContainer = ref(null)
 // SSE 连接
 let eventSource = null;
 
+const route = useRoute()
+
+// 输入的消息
+const message = ref(history.state?.firstMessage || '')
+
+// 对话 ID
+const chatId = ref(route.params.chatId || null)
+
 // 发送消息
-const sendMessage = async () => {
+const sendMessage = async (payload) => {
   // 校验发送的消息不能为空
   if (!message.value.trim()) return
+
+  console.log('选中的模型:', payload.selectedModel)
+  console.log('是否联网:', payload.isNetworkSearch)
 
   // 将用户发送的消息添加到 chatList 聊天列表中
   const userMessage = message.value.trim()
@@ -349,64 +354,66 @@ const sendMessage = async () => {
 
   // 点击发送按钮后，清空输入框
   message.value = ''
-  // 将输入框的高度重置
-  if (textareaRef.value) {
-    textareaRef.value.style.height = 'auto'
-  }
 
-  // 添加一个占位的回复消息
-  chatList.value.push({ role: 'assistant', content: '' })
-
+   // 添加一个占位的回复消息，Loading 加载状态为 true
+  chatList.value.push({ role: 'assistant', content: '', loading: true})
   try {
-    // 建立 SSE 连接
-    eventSource = new EventSource(`http://localhost:8080/mcp/ai/generateStream?message=${encodeURIComponent(userMessage)}&chatId=5`)
-    //eventSource = new EventSource(`http://localhost:8080/v7/ai/generateStream3?message=${encodeURIComponent(userMessage)}&lang=Python`)
-    // C++:eventSource = new EventSource(`http://localhost:8080/v7/ai/generateStream3?message=${encodeURIComponent(userMessage)}&lang=CPP`)
-    // eventSource = new EventSource(`http://localhost:8080/v7/ai/generateStream3?message=${encodeURIComponent(userMessage)}&lang=Go`)
+    // 构建请求体
+    const requestBody = {
+      message: userMessage,
+      chatId: chatId.value,
+      modelName: payload.selectedModel?.name,
+      networkSearch: payload.isNetworkSearch
+    }
 
     // 响应的回答
     let responseText = ''
+    // 获取最后一条消息
+    const lastMessage = chatList.value[chatList.value.length - 1]
 
-    // 处理消息事件
-    eventSource.onmessage = (event) => {
-      console.log('接收到数据: ', event.data)
-      if (event.data) { // 若响应数据不为空
-        //解析JSON
-        let response=JSON.parse(event.data)
-        //持续追加流式回答
-        responseText+=response.v
-        
-        // 更新最后一条消息
-        chatList.value[chatList.value.length - 1].content = responseText;
-        // 滚动到底部
-        scrollToBottom()
-      }
-    }
+    const controller = new AbortController()
+    const signal = controller.signal
 
-    // 处理错误
-    eventSource.onerror = (error) => {
-      // 通常 SSE 在完成传输后会触发一次 error 事件，这是正常的
-      if (error.eventPhase === EventSource.CLOSED) {
-        console.log('SSE正常关闭')
-      } else {
-        // 提示用户 “请求出错”
-        chatList.value[chatList.value.length - 1].content = '抱歉，请求出错了，请稍后重试。'
+	// 调用 SSE 流式对话接口
+    fetchEventSource('http://localhost:8080/chat/completion', {
+      method: 'POST',
+      signal: signal,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+      onmessage(msg) {
+        if (msg.event === '') {
+          // 解析 JSON
+          let parseJson = JSON.parse(msg.data)
+          // 持续追加流式回答
+          responseText += parseJson.v
+
+          // 更新最后一条消息
+          chatList.value[chatList.value.length - 1].content = responseText
+          // 滚动到底部
+          scrollToBottom()
+        }
+        else if (msg.event === 'close') {
+          console.log('-- sse close')
+          controller.abort();
+        }
+      },
+      onerror(err) {
+        throw err;    // 必须 throw 才能停止 
       }
-      
-      // 关闭 SSE
-      closeSSE()
-      // 滚动到底部
-      scrollToBottom()
-    }
+    })
+
   } catch (error) {
     console.error('发送消息错误: ', error)
     // 提示用户 “请求出错”
-    chatList.value[chatList.value.length - 1].content = '抱歉，请求出错了，请稍后重试。'
+    const lastMessage = chatList.value[chatList.value.length - 1]
+    lastMessage.content = '抱歉，请求出错了，请稍后重试。'
+    lastMessage.loading = false
     // 滚动到底部
-    scrollToBottom()  
+    scrollToBottom()
   }
 }
-
 // 关闭 SSE 连接
 const closeSSE = () => {
   if (eventSource) {
@@ -421,5 +428,6 @@ onBeforeUnmount(() => {
 })
 
 console.log('首页传递过来的消息: ', history.state?.firstMessage)
+
 
 </script>
