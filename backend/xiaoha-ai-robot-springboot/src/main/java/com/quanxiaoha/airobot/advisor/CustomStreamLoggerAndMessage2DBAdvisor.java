@@ -8,6 +8,7 @@ import org.springframework.ai.chat.client.ChatClientRequest;
 import org.springframework.ai.chat.client.ChatClientResponse;
 import org.springframework.ai.chat.client.advisor.api.StreamAdvisor;
 import org.springframework.ai.chat.client.advisor.api.StreamAdvisorChain;
+import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.transaction.support.TransactionTemplate;
 import reactor.core.publisher.Flux;
@@ -48,7 +49,7 @@ public class CustomStreamLoggerAndMessage2DBAdvisor implements StreamAdvisor{
     //ChatClientRequest chatClientRequest：AI 客户端请求对象，包含用户提问、模型参数、提示词等
     //StreamAdvisorChain streamAdvisorChain：Advisor 责任链，调用 nextStream() 放行请求，执行后续链路（调用大模型、返回流式结果）
     //返回值 Flux<ChatClientResponse>：Reactor 流式对象，对应 AI 分段返回的数据（流式输出）
-    public Flux<ChatClientResponse> adviseStream(ChatClientRequest chatClientRequest, StreamAdvisorChain streamAdvisorChain){
+    public Flux<ChatClientResponse> adviseStream(ChatClientRequest chatClientRequest, StreamAdvisorChain streamAdvisorChain) {
         // 对话 UUID
         String chatUuid = aiChatReqVO.getChatId();
         // 用户消息
@@ -56,23 +57,40 @@ public class CustomStreamLoggerAndMessage2DBAdvisor implements StreamAdvisor{
         //责任链放行，把请求交给下一个 Advisor / 直接调用 AI 模型
         Flux<ChatClientResponse> chatClientResponseFlux = streamAdvisorChain.nextStream(chatClientRequest);
         //作用：拼接 AI 分段返回的内容，最终得到完整回答
+        // 创建 AI 流式推理过程聚合容器（线程安全）
+        AtomicReference<StringBuilder> fullReasoning = new AtomicReference<>(new StringBuilder());
+
+        // 创建 AI 流式回答聚合容器（线程安全）
         AtomicReference<StringBuilder> fullContent = new AtomicReference<>(new StringBuilder());
 
         // 返回处理后的流
         return chatClientResponseFlux
-                .doOnNext(response -> {//Flux 每推送一个数据分片就触发一次（对应前端看到的 “逐字输出”）
-                    // 逐块收集内容:AI 单次返回的一小段文本
-                    String chunk = response.chatResponse().getResult().getOutput().getText();
+                .doOnNext(response -> {
+                    // 获取 AI 回复的消息
+                    AssistantMessage message = response.chatResponse().getResult().getOutput();
 
-                    log.info("## chunk: {}", chunk);
+                    // 获取推理内容（如果存在）
+                    String reasoningChunk = message.getMetadata().get("reasoningContent").toString();
+
+                    // 逐块收集正式回答
+                    String chunk = message.getText();
+
+                    if (reasoningChunk != null) {
+                        log.info("## reasoning chunk: {}", reasoningChunk);
+                        fullReasoning.get().append(reasoningChunk);
+                    }
 
                     // 若 chunk 块不为空，则追加到 fullContent 中
-                    //从 AtomicReference 中取出 StringBuilder 做拼接。
                     if (chunk != null) {
+                        log.info("## chunk: {}", chunk);
                         fullContent.get().append(chunk);
                     }
                 })
                 .doOnComplete(() -> {//当 AI 把所有内容推送完毕、流式输出正常结束时触发
+                    // 流完成后打印完整推理过程
+                    String completeReasoning = fullReasoning.get().toString();
+                    log.info("\n==== FULL Reasoning RESPONSE ====\n{}\n========================", completeReasoning);
+
                     // 流完成后打印完整回答
                     String completeResponse = fullContent.get().toString();
                     log.info("\n==== FULL AI RESPONSE ====\n{}\n========================", completeResponse);
@@ -93,6 +111,7 @@ public class CustomStreamLoggerAndMessage2DBAdvisor implements StreamAdvisor{
                                     .chatUuid(chatUuid)
                                     .content(completeResponse)
                                     .role(MessageType.ASSISTANT.getValue()) // AI 回答
+                                    .reasoningContent(completeReasoning)
                                     .createTime(LocalDateTime.now())
                                     .build());
 

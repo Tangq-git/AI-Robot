@@ -38,4 +38,8 @@ public class FindChatHistoryMessagePageListRspVO {
      * 发布时间
      */
     private LocalDateTime createTime;
+    /**
+     * 推理内容
+     */
+    private String reasoning;
 }

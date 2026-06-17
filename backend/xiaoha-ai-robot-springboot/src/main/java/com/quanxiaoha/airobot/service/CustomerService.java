@@ -1,5 +1,10 @@
 package com.quanxiaoha.airobot.service;
 
+import com.quanxiaoha.airobot.model.vo.customerService.DeleteMarkdownFileReqVO;
+import com.quanxiaoha.airobot.model.vo.customerService.FindMarkdownFilePageListReqVO;
+import com.quanxiaoha.airobot.model.vo.customerService.FindMarkdownFilePageListRspVO;
+import com.quanxiaoha.airobot.model.vo.customerService.UpdateMarkdownFileReqVO;
+import com.quanxiaoha.airobot.utils.PageResponse;
 import com.quanxiaoha.airobot.utils.Response;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,4 +22,25 @@ public interface CustomerService {
      * @return
      */
     Response<?> uploadMarkdownFile(MultipartFile file);
+
+    /**
+     * 删除 Markdown 问答文件
+     * @param deleteMarkdownFileReqVO
+     * @return
+     */
+    Response<?> deleteMarkdownFile(DeleteMarkdownFileReqVO deleteMarkdownFileReqVO);
+
+    /**
+     * 分页查询 Markdown 问答文件
+     * @param findMarkdownFilePageListReqVO
+     * @return
+     */
+    PageResponse<FindMarkdownFilePageListRspVO> findMarkdownFilePageList(FindMarkdownFilePageListReqVO findMarkdownFilePageListReqVO);
+
+    /**
+     * 修改  Markdown 问答文件信息
+     * @param updateMarkdownFileReqVO
+     * @return
+     */
+    Response<?> updateMarkdownFile(UpdateMarkdownFileReqVO updateMarkdownFileReqVO);
 }

@@ -1,5 +1,5 @@
 <template>
-  <div class="markdown-container">
+  <div class="markdown-container" :class="props.customCss">
     <div v-html="renderedContent">
     </div>    
   </div>
@@ -16,6 +16,10 @@ import { message } from 'ant-design-vue'
 // 定义一个 content 字段，用于父组件传入 markdown 文本
 const props = defineProps({
   content: {
+    type: String,
+    default: ''
+  },
+    customCss: {
     type: String,
     default: ''
   }

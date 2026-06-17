@@ -4,17 +4,21 @@ import com.quanxiaoha.airobot.advisor.CustomChatMemoryAdvisor;
 import com.quanxiaoha.airobot.advisor.CustomStreamLoggerAndMessage2DBAdvisor;
 import com.quanxiaoha.airobot.advisor.NetworkSearchAdvisor;
 import com.quanxiaoha.airobot.aspect.ApiOperationLog;
+import com.quanxiaoha.airobot.domain.mapper.ChatFileStorageMapper;
 import com.quanxiaoha.airobot.domain.mapper.ChatMessageMapper;
 import com.quanxiaoha.airobot.model.vo.chat.*;
 import com.quanxiaoha.airobot.service.ChatService;
 import com.quanxiaoha.airobot.service.SearXNGService;
 import com.quanxiaoha.airobot.service.SearchResultContentFetcherService;
+import com.quanxiaoha.airobot.tools.DateTimeTools;
 import com.quanxiaoha.airobot.utils.PageResponse;
 import com.quanxiaoha.airobot.utils.Response;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
+import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
@@ -38,7 +42,10 @@ import java.util.List;
 @Slf4j
 public class ChatController {
 
-
+    @Resource
+    private ChatFileStorageMapper chatFileStorageMapper;
+    @Resource
+    private ChatClient chatClient;
     @Resource
     private ChatService chatService;
 
@@ -68,12 +75,12 @@ public class ChatController {
         Double temperature= aiChatReqVO.getTemperature();
         // 是否开启联网搜索
         boolean networkSearch = aiChatReqVO.getNetworkSearch();
-        ChatModel chatModel=OpenAiChatModel.builder()
-                .openAiApi(OpenAiApi.builder()
-                        .baseUrl(baseUrl)
-                        .apiKey(apiKey)
-                        .build())
-        .build();
+//        ChatModel chatModel=OpenAiChatModel.builder()
+//                .openAiApi(OpenAiApi.builder()
+//                        .baseUrl(baseUrl)
+//                        .apiKey(apiKey)
+//                        .build())
+//        .build();
 
         // Advisor 集合
         List<Advisor> advisors = Lists.newArrayList();
@@ -85,33 +92,55 @@ public class ChatController {
             // 添加自定义对话记忆 Advisor（以最新的 50 条消息作为记忆）
             advisors.add(new CustomChatMemoryAdvisor(chatMessageMapper, aiChatReqVO, 50));
         }
-
         // 添加自定义对话记忆 Advisor（以最新的 50 条消息作为记忆）
         advisors.add(new CustomChatMemoryAdvisor(chatMessageMapper, aiChatReqVO, 50));
-
         // 添加自定义打印流式对话日志 Advisor
         advisors.add(new CustomStreamLoggerAndMessage2DBAdvisor(chatMessageMapper, aiChatReqVO, transactionTemplate));
 
         // 动态设置调用的模型名称、温度值
-        ChatClient.ChatClientRequestSpec chatClientRequestSpec = ChatClient.create(chatModel)
-                .prompt()
+//        ChatClient.ChatClientRequestSpec chatClientRequestSpec = ChatClient.create(chatModel)
+//                .prompt()
+//                .tools(new DateTimeTools())
+//                //可注册多个工具
+//                .options(OpenAiChatOptions.builder()
+//                        .model(modelName)
+//                        .temperature(temperature)
+//                        .build())
+//                .user(userMessage); // 用户提示词
+
+        // 只用注入的全局chatClient，自带MCP高德地图工具
+        ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClient.prompt()
+                .tools(new DateTimeTools()) // 追加本地自定义工具
                 .options(OpenAiChatOptions.builder()
                         .model(modelName)
                         .temperature(temperature)
                         .build())
-                .user(userMessage); // 用户提示词
-
+                .user(userMessage);
 
         // 应用 Advisor 集合
         chatClientRequestSpec.advisors(advisors);
 
-        // 流式输出
+        //流式输出
         return chatClientRequestSpec
                 .stream()
-                .content()
-                .mapNotNull(text -> AIResponse.builder().v(text).build()); // 构建返参 AIResponse
+                .chatResponse()
+                .mapNotNull(chatResponse -> {
+                    //获取AI恢复到消息
+                    AssistantMessage message=chatResponse.getResult().getOutput();
+                    //获取正式回答
+                    String text=message.getText();
+                    //获取推理内容
+                    String reasoningContent=message.getMetadata().get("reasoningContent").toString();
+                    //构建响应对象
+                    if(StringUtils.isNotBlank(reasoningContent)){
+                        //返回思考过程
+                        return AIResponse.builder()
+                                .reasoning(reasoningContent)
+                                .build();
+                    }
+                    return AIResponse.builder().v(text).build();
+                });
     }
-
     @PostMapping("/new")
     @ApiOperationLog(description = "新建对话")
     public Response<?> newChat(@RequestBody @Validated NewChatReqVO newChatReqVO) {
@@ -122,7 +151,6 @@ public class ChatController {
     public PageResponse<FindChatHistoryMessagePageListRspVO> findChatMessagePageList(@RequestBody @Validated FindChatHistoryMessagePageListReqVO findChatHistoryMessagePageListReqVO) {
         return chatService.findChatHistoryMessagePageList(findChatHistoryMessagePageListReqVO);
     }
-
 
     @PostMapping("/list")
     @ApiOperationLog(description = "查询历史对话")
@@ -150,4 +178,5 @@ public class ChatController {
     public Response<?> deleteChat(@RequestBody @Validated DeleteChatReqVO deleteChatReqVO) {
         return chatService.deleteChat(deleteChatReqVO);
     }
+
 }

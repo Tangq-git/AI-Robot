@@ -15,4 +15,21 @@ public enum AiCustomerServiceMdStatusEnum {
 
     private Integer code;
     private String description;
+
+    /**
+     * 根据 code 获取枚举
+     * @param code
+     * @return
+     */
+    public static AiCustomerServiceMdStatusEnum codeOf(Integer code) {
+        if (code == null) {
+            return null;
+        }
+        for (AiCustomerServiceMdStatusEnum status : values()) {
+            if (status.getCode().equals(code)) {
+                return status;
+            }
+        }
+        return null;
+    }
 }

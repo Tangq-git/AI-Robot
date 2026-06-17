@@ -111,7 +111,7 @@ const props = defineProps({
   },
     placeholder: { // 设置 textarea placeholder 提示
     type: String,
-    default: '给小哈 AI 机器人发送消息'
+    default: '给小科 AI 机器人发送消息'
   },
     showModelDropdown: { // 展示模型下拉选择 select
     type: Boolean,

@@ -35,5 +35,9 @@ public class FindChatHistoryPageListRspVO {
      * 更新时间
      */
     private LocalDateTime updateTime;
+    /**
+     * 推理内容
+     */
+    private String reasoning;
 
 }

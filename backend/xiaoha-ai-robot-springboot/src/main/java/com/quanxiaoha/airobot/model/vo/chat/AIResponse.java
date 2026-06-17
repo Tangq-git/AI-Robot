@@ -12,4 +12,7 @@ import lombok.NoArgsConstructor;
 public class AIResponse {
     //流式相应内容
     private  String v;
+
+    //推理过程
+    private String reasoning;
 }
